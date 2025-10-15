@@ -31,11 +31,22 @@ struct ScribbleView: View {
             let transform = scribble.normalizingTransform(outputSide: side, insetRatio: contentInsetRatio)
             let strokeStyle = StrokeStyle(lineWidth: strokeWidth, lineCap: .round, lineJoin: .round)
             for stroke in scribble.strokes {
-                context.stroke(
-                    .init { $0.addLines(stroke.points.map { $0.applying(transform) }) },
-                    with: .color(strokeColor),
-                    style: strokeStyle
-                )
+                let transformedPoints = stroke.points.map { $0.applying(transform) }
+                if transformedPoints.count == 1, let point = transformedPoints.first {
+                    let circlePath = Path(ellipseIn: CGRect(
+                        x: point.x - strokeWidth / 2,
+                        y: point.y - strokeWidth / 2,
+                        width: strokeWidth,
+                        height: strokeWidth)
+                    )
+                    context.fill(circlePath, with: .color(strokeColor))
+                } else {
+                    context.stroke(
+                        .init { $0.addLines(transformedPoints) },
+                        with: .color(strokeColor),
+                        style: strokeStyle
+                    )
+                }
             }
         }
         .drawingGroup()

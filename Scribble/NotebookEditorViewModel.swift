@@ -1,5 +1,5 @@
 //
-//  ScribbleViewModel.swift
+//  NotebookEditorViewModel.swift
 //  Scribble
 //
 //  Created by Seunghun on 10/14/25.
@@ -11,14 +11,15 @@ import Observation
 
 @Observable
 @MainActor
-class ScribbleViewModel {
-    var scribbles: [Scribble] = []
+class NotebookEditorViewModel {
+    var notebook: Notebook
     var scribble = Scribble()
     var isEditing = false { willSet { isEditingSubject.send(newValue) } }
     private var isEditingSubject = CurrentValueSubject<Bool, Never>(false)
     private var cancellables: Set<AnyCancellable> = []
 
-    init() {
+    init(notebook: Notebook) {
+        self.notebook = notebook
         bind()
     }
 
@@ -35,7 +36,7 @@ class ScribbleViewModel {
 
     private func process() {
         guard scribble.isEmpty == false else { return }
-        scribbles.append(scribble)
+        notebook = notebook.appending(scribble: scribble)
         scribble = Scribble()
     }
 }

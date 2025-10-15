@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NotebookList: View {
     @Bindable var viewModel: NotebookListViewModel
+    @State private var showingSettings = false
 
     var body: some View {
         NavigationStack {
@@ -26,6 +27,15 @@ struct NotebookList: View {
                 }
                 .animation(.easeInOut, value: viewModel.notebooks)
                 .navigationTitle("Scribbles")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
 
                 VStack {
                     Spacer()
@@ -46,6 +56,9 @@ struct NotebookList: View {
             }
             .fullScreenCover(isPresented: $viewModel.isPresentingEditor, onDismiss: viewModel.onDismiss) {
                 NotebookEditor(notebook: $viewModel.notebook)
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
         }
     }

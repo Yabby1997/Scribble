@@ -17,6 +17,7 @@ struct LongPressButton: View {
     @State private var isPressing = false
     @State private var progress: Double = 0
     @State private var timer: Timer?
+    @Environment(\.isEnabled) private var isEnabled
 
     init(
         image: Image,
@@ -35,25 +36,29 @@ struct LongPressButton: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
-                .fill(backgroundColor)
+                .fill(isEnabled ? backgroundColor : Color.gray)
             image
                 .foregroundColor(.white)
         }
         .aspectRatio(1, contentMode: .fit)
+        .opacity(isEnabled ? 1.0 : 0.5)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .trim(from: 0, to: progress)
                 .stroke(progressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         )
+        .animation(.easeInOut(duration: 0.2), value: isEnabled)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
+                    guard isEnabled else { return }
                     if !isPressing {
                         startPress()
                     }
                 }
                 .onEnded { _ in
+                    guard isEnabled else { return }
                     endPress()
                 }
         )

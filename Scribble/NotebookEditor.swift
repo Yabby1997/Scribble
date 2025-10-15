@@ -11,6 +11,8 @@ import SwiftUI
 struct NotebookEditor: View {
     @Binding var notebook: Notebook
     @Environment(\.dismiss) var dismiss
+    @AppStorage("debounceDelay") private var debounceDelay: Double = 3.0
+    @AppStorage("isOppositeInput") private var isOppositeInput: Bool = false
 
     @State private var scribble = Scribble()
     @State private var isEditing = false
@@ -29,17 +31,37 @@ struct NotebookEditor: View {
                 .ignoresSafeArea()
             VStack {
                 Spacer()
-                HStack {
+                HStack(spacing: 24) {
                     Spacer()
                     LongPressButton(
                         image: Image(systemName: "xmark"),
                         backgroundColor: .red,
                         progressColor: .yellow,
-                        duration: 2.0
+                        duration: 1.0
                     ) {
                         dismiss()
                     }
                     .frame(width: 60, height: 60)
+                    LongPressButton(
+                        image: Image(systemName: "trash"),
+                        backgroundColor: .orange,
+                        progressColor: .yellow,
+                        duration: 0.5
+                    ) {
+                        trashScribble()
+                    }
+                    .frame(width: 60, height: 60)
+                    .disabled(scribble.isEmpty)
+                    LongPressButton(
+                        image: Image(systemName: "arrow.turn.down.left"),
+                        backgroundColor: .blue,
+                        progressColor: .yellow,
+                        duration: 0.5
+                    ) {
+                        processScribble()
+                    }
+                    .frame(width: 60, height: 60)
+                    .disabled(scribble.isEmpty)
                     Spacer()
                 }
                 .padding()
@@ -53,7 +75,7 @@ struct NotebookEditor: View {
             debounceTask?.cancel()
             if !newValue {
                 debounceTask = Task {
-                    try? await Task.sleep(for: .seconds(3))
+                    try? await Task.sleep(for: .seconds(debounceDelay))
                     guard !Task.isCancelled else { return }
                     processScribble()
                 }
@@ -61,9 +83,17 @@ struct NotebookEditor: View {
         }
     }
 
+    private func trashScribble() {
+        debounceTask?.cancel()
+        debounceTask = nil
+        scribble = Scribble()
+    }
+    
     private func processScribble() {
         guard !scribble.isEmpty else { return }
-        notebook = notebook.appending(scribble: scribble)
+        debounceTask?.cancel()
+        debounceTask = nil
+        notebook = notebook.appending(scribble: isOppositeInput ? scribble.rotated : scribble)
         scribble = Scribble()
     }
 }

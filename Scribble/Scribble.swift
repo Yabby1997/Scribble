@@ -22,6 +22,23 @@ struct Scribble: Identifiable, Hashable, Equatable, Codable {
         self.id = id
         self.strokes = strokes
     }
+    
+    var rotated: Scribble {
+        let allPoints = strokes.flatMap { $0.points }
+        guard let first = allPoints.first else { return self }
+        let bounds = allPoints.dropFirst().reduce(CGRect(origin: first, size: .zero)) { $0.union(CGRect(origin: $1, size: .zero)) }
+        let rotatedStrokes = strokes.map { stroke in
+            Stroke(
+                points: stroke.points.map { point in
+                    CGPoint(
+                        x: 2 * bounds.midX - point.x,
+                        y: 2 * bounds.midY - point.y
+                    )
+                }
+            )
+        }
+        return Scribble(id: id, strokes: rotatedStrokes)
+    }
 }
 
 struct Notebook: Identifiable, Hashable, Equatable, Codable {
